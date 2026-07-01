@@ -22,10 +22,15 @@ jobs:
       - name: checkout latest
         uses: actions/checkout@v1
 
-      - name: setup dotnet core sdk
-        uses: actions/setup-dotnet@v1
+      - name: setup dotnet sdk
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 3.1.*
+          dotnet-version: 10.0.*
+
+      - name: setup node (required for the ag-Grid interop esbuild bundle)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - name: extract version base
         id: extract_version_base

@@ -45,10 +45,14 @@ Here is a list of features that are currently supported:
   * cell-selection suppression
   * datasource page caching
   * row deselection
-* Grid and Column APIs
+* Grid API (the Column API is now unified into the Grid API, per ag-Grid v31+)
 * local JS script configuration
 * Works with both Blazor WASM and Blazor Server hosting models
   (with some caveats)
+* ag-Grid **v36** with the Theming API (Quartz/Balham/Alpine/Material)
+* Curated v36 options: quick filter, column & floating filters, `defaultColDef`,
+  animated rows, CSV/Excel export, row grouping & aggregation, master/detail,
+  and the tool-panel sidebar (Enterprise features require a license)
 
 ## Examples
 
@@ -94,43 +98,58 @@ Then add the nuget to your project:
 PS> dotnet add package BlazorAgGrid
 ```
 
+> **Requirements:** .NET 10 (net10.0). The library and all example projects
+> target net10.0.
+
 ### ag-Grid Assets
 
-To use this component you'll need to add a few basic resource
-references to ag-Grid assets such as CSS and JS files as described
-in the [docs](https://www.ag-grid.com/javascript-grid/#add-ag-grid-to-your-project).
+**Nothing to add to your `<head>`.** This component targets **ag-Grid v36**
+and bundles ag-Grid (community + enterprise) together with the Blazor interop
+into a single JS module (`_content/BlazorAgGrid/blazor-ag-grid.js`) that the
+`<AgGrid>` component imports on demand. Styling is handled by the ag-Grid
+[Theming API](https://www.ag-grid.com/javascript-data-grid/theming/) — no CSS
+`<link>` tags and no CDN `<script>` references are required (or supported).
 
-Add this to the `<head>` section of your `index.html` file.
+> **Build prerequisite:** the interop bundle is produced by esbuild at build
+> time, so **Node.js must be on `PATH`** when you build the `BlazorAgGrid`
+> package (CI included). Consuming apps that reference the published NuGet get
+> the pre-built bundle and do not need Node.
 
-```javascript
-    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css">
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-balham.css">
+### Theming
+
+Set the `Theme` parameter to pick a built-in theme (default `Quartz`):
+
+```razor
+<AgGrid Theme="GridTheme.Balham" Options="gridOpts">...</AgGrid>
 ```
 
-The last line _assumes_ you're using the [`Balham` theme](https://www.ag-grid.com/javascript-grid-themes-provided/#balham-themes).
-If you choose to use another [theme](https://www.ag-grid.com/javascript-grid-styling/),
-adjust appropriately.
+Available: `Quartz` (default), `Balham`, `Alpine`, `Material`.
 
-### Blazor ag-Grid Assets and Component
+### Enterprise license
 
-Next you want to add a reference to the JS interop support file
-specific to this Blazor component by also adding this to your
-`<head>` section:
+ag-Grid **Enterprise** features require a commercial license. Provide the key
+at runtime — **never hardcode or commit it.** Preferred: configure it once via
+DI, sourced from configuration (environment variable, user-secrets, or an
+approved secret store such as Azure Key Vault):
 
-```javascript
-    <script src="_content/BlazorAgGrid/blazor-ag-grid.js"></script>
+```csharp
+builder.Services.AddBlazorAgGrid(o => o.LicenseKey = builder.Configuration["AgGridLicenseKey"]);
 ```
 
-Finally, in your Blazor pages, drop in the `<AgGrid>` component
-wherever you want to use it and configure with these properties
-and child compoenents:
+Or per-grid via the `LicenseKey` parameter. Without a key the grid still runs
+in watermarked trial mode.
+
+### Component
+
+In your Blazor pages, drop in the `<AgGrid>` component wherever you want to use
+it and configure with these properties and child components:
 
 * Properties:
   * `WidthStyle` & `HeightStyle`
   * `Options`, `Callbacks` and `Events` (see below)
+  * `Theme` (see above) and `LicenseKey`
 * Child Components:
-  * `<ColumnDefinition>`
+  * `<GridColumn>` / `<ColumnDefinition>`
   * `<RowData>`
 
 See the [example projects](src/examples) as described above for
