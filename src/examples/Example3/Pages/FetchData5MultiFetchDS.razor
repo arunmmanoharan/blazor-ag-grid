@@ -104,10 +104,9 @@ else
         {
             Datasource = albumDs,
             EnablePagination = true,
-            EnableRowDeselection = true,
             RowModelType = RowModelType.Infinite,
             RowSelection = RowSelection.Multiple,
-            SuppressCellSelection = true,
+            SuppressCellFocus = true,
         };
         albumEv = new GridEvents
         {
@@ -146,10 +145,9 @@ else
             Datasource = photoDs,
             EnablePagination = true,
             PaginationPageSize = 20,
-            EnableRowDeselection = true,
             RowModelType = RowModelType.Infinite,
             RowSelection = RowSelection.Multiple,
-            SuppressCellSelection = true,
+            SuppressCellFocus = true,
         };
         photoEv = new GridEvents
         {
@@ -185,7 +183,7 @@ else
 
     private async Task SizeToFitCols500()
     {
-        await photoGrid.ColumnApi.SizeColumnsToFit(500);
+        await photoGrid.Api.SizeColumnsToFit();
     }
 
     private async Task AutosizeCols()
@@ -198,7 +196,7 @@ else
             "url",
             "thumbnailUrl",
         };
-        await photoGrid.ColumnApi.AutoSizeColumns(colKeys);
+        await photoGrid.Api.AutoSizeColumns(colKeys);
     }
 
     private async Task RefreshRows()
