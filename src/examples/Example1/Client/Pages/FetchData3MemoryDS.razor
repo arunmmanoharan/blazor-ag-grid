@@ -45,8 +45,7 @@ else
         {
             Datasource = new WeatherDataSource { Http = Http },
             RowModelType = RowModelType.Infinite,
-            EnableRowDeselection = true,
-            SuppressCellSelection = true,
+            SuppressCellFocus = true,
         };
     }
 
@@ -68,7 +67,7 @@ else
             try
             {
                 if (Forecasts == null)
-                    Forecasts = await Http.GetJsonAsync<WeatherForecast[]>("WeatherForecast");
+                    Forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
 
                 var page = Forecasts
                     .Skip(getParams.StartRow)

@@ -48,14 +48,13 @@ else
         {
             Datasource = new PhotosDataSource { Http = Http },
             EnablePagination = true,
-            EnableRowDeselection = true,
             RowModelType = RowModelType.Infinite,
             RowSelection = RowSelection.Single,
-            SuppressCellSelection = true,
+            SuppressCellFocus = true,
         };
         cb = new GridCallbacks
         {
-            GetRowNodeId = node =>
+            GetRowId = node =>
             {
                 var id = node.GetProperty("id").ToString();
                 Console.WriteLine($"Got node: [{id}]");
@@ -128,7 +127,7 @@ else
                     ? (int?)totalCountInt
                     : null;
 
-                var photos = await Http.GetJsonAsync<Photo[]>(url);
+                var photos = await Http.GetFromJsonAsync<Photo[]>(url);
                 Console.WriteLine("From [{0}:{1}], got [{2}] row(s) out of [{3}]",
                     getParams.StartRow, getParams.EndRow, photos.Length, totalCount);
 
