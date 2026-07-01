@@ -98,6 +98,51 @@ namespace BlazorAgGrid
         /// Enables Tree Data:
         ///   https://www.ag-grid.com/javascript-grid-tree-data/
         public bool? TreeData { get; set; }
+
+        // ----- v36 feature options -----
+
+        /// Text to filter across all columns (Quick Filter).
+        public string QuickFilterText { get; set; }
+
+        /// Set to true to enable row animations.
+        public bool? AnimateRows { get; set; }
+
+        /// Default column definition applied to every column.
+        public DefaultColDef DefaultColDef { get; set; }
+
+        /// Enterprise. Controls the Row Group Panel visibility.
+        public RowGroupPanelShow? RowGroupPanelShow { get; set; }
+
+        /// Enterprise. Set to true to show the tool-panel sidebar
+        /// (columns + filters panels).
+        public bool? SideBar { get; set; }
+
+        /// Enterprise. Enables the Master / Detail feature.
+        public bool? MasterDetail { get; set; }
+
+        /// Enterprise. Passthrough configuration object for the detail grid
+        /// when <see cref="MasterDetail"/> is enabled.
+        public object DetailCellRendererParams { get; set; }
+    }
+
+    /// <summary>Default column definition (applied to all columns).</summary>
+    public class DefaultColDef
+    {
+        public bool? Sortable { get; set; }
+        public bool? Resizable { get; set; }
+        public bool? Filter { get; set; }
+        public bool? FloatingFilter { get; set; }
+        public bool? Editable { get; set; }
+        public int? Flex { get; set; }
+        public int? MinWidth { get; set; }
+    }
+
+    [JsonConverter(typeof(EnumConverter))]
+    public enum RowGroupPanelShow
+    {
+        Never = 0,
+        Always = 1,
+        OnlyWhenGrouping = 2,
     }
 
     [JsonConverter(typeof(EnumConverter))]
