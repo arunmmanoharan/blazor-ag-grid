@@ -1,47 +1,38 @@
-﻿using Microsoft.JSInterop;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BlazorAgGrid
 {
     /// <summary>
-    /// Strongly-typed access to:
-    ///   https://www.ag-grid.com/javascript-grid-column-api/
+    /// Obsolete: as of ag-Grid v31 the Column API is merged into the Grid API.
+    /// This type remains as a thin shim that delegates to <see cref="GridApi"/>
+    /// so existing callers keep compiling. Use <c>AgGrid.Api</c> instead.
     /// </summary>
+    [Obsolete("The Column API is merged into the Grid API (ag-Grid v31+). Use AgGrid.Api.")]
     public class GridColumnApi
     {
-        internal string CallColumnApi = "blazor_ag_grid.gridOptions_callColumnApi";
+        private readonly GridApi _api;
 
-        private IJSRuntime _js;
-        private string _id;
-
-        internal GridColumnApi(IJSRuntime js, string id)
+        internal GridColumnApi(GridApi api)
         {
-            _js = js;
-            _id = id;
+            _api = api;
         }
 
+        // The former Column API SizeColumnsToFit(width) has no v36 equivalent that
+        // takes a width; delegate to the parameterless Grid API method.
         public Task SizeColumnsToFit(int width)
         {
-            return CallApi("sizeColumnsToFit", width);
+            return _api.SizeColumnsToFit();
         }
 
         public Task AutoSizeColumn(string colKey)
         {
-            return CallApi("autoSizeColumn", colKey);
+            return _api.AutoSizeColumn(colKey);
         }
 
-        public  Task AutoSizeColumns(string[] colKeys)
+        public Task AutoSizeColumns(string[] colKeys)
         {
-            // Cast to make sure arg is not unwound
-            return CallApi("autoSizeColumns", (object)colKeys);
-        }
-
-        private Task CallApi(string name, params object[] args)
-        {
-            return _js.InvokeVoidAsync(CallColumnApi, _id, name, args).AsTask();
+            return _api.AutoSizeColumns(colKeys);
         }
     }
 }

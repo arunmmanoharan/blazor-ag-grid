@@ -1,4 +1,4 @@
-﻿using Microsoft.JSInterop;
+using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -36,27 +36,26 @@ namespace BlazorAgGrid
 
         private void PrepareDatasource(object source, PrepareForInteropEventArgs ev)
         {
-            Console.WriteLine("Preparing DS");
             InteropDatasource = DotNetObjectReference.Create(
-                new InteropDatasourceProxy(ev.JS, Datasource));
+                new InteropDatasourceProxy(ev.Module, Datasource));
         }
 
         // Wrapper DS around user-provided DS with proper JS-interop handling
         public class InteropDatasourceProxy
         {
-            private IJSRuntime _js;
+            private IJSObjectReference _module;
             private IGridDatasource _inner;
 
-            public InteropDatasourceProxy(IJSRuntime js, IGridDatasource inner)
+            public InteropDatasourceProxy(IJSObjectReference module, IGridDatasource inner)
             {
-                _js = js;
+                _module = module;
                 _inner = inner;
             }
 
             [JSInvokable]
             public Task GetRows(InteropGetRowsParams getParams)
             {
-                var proxy = new GetRowsParamsProxy(_js, getParams);
+                var proxy = new GetRowsParamsProxy(_module, getParams);
                 return _inner.GetRows(proxy);
             }
 
@@ -88,53 +87,43 @@ namespace BlazorAgGrid
 
         public class GetRowsParamsProxy : IGetRowsParams
         {
-            private IJSRuntime _js;
+            private IJSObjectReference _module;
             private IGetRowsParams _inner;
 
-            public GetRowsParamsProxy(IJSRuntime js, IGetRowsParams inner)
+            public GetRowsParamsProxy(IJSObjectReference module, IGetRowsParams inner)
             {
-                _js = js;
+                _module = module;
                 _inner = inner;
             }
 
             // The first row index to get.
-            //startRow: number;
             public int StartRow => _inner.StartRow;
 
             // The first row index to NOT get.
-            //endRow: number;
             public int EndRow => _inner.EndRow;
 
             // If doing Server-side sorting, contains the sort model
-            //sortModel: any,
             public SortModel[] SortModel => _inner.SortModel;
 
             // If doing Server-side filtering, contains the filter model
-            //filterModel: any;
             public object FilterModel => _inner.FilterModel;
 
             // The grid context object
-            //context: any;
             public object Context => _inner.Context;
 
             public string CallbackId => _inner.CallbackId;
 
-            //// Callback to call when the request is successful.
-            ////successCallback(rowsThisBlock: any[], lastRow?: number) : void;
+            // Callback to call when the request is successful.
             public Task SuccessCallback(object[] rowsThisBlock, int? lastRow = null)
             {
-                Console.WriteLine("GetRowsParamsProxy.SuccessCallback: {0}", CallbackId);
-                return _js.InvokeVoidAsync("blazor_ag_grid.datasource_successCallback",
+                return _module.InvokeVoidAsync("datasourceSuccess",
                     CallbackId, rowsThisBlock, lastRow).AsTask();
             }
 
-            //// Callback to call when the request fails.
-            ////failCallback() : void;
+            // Callback to call when the request fails.
             public Task FailCallback()
             {
-                Console.WriteLine("GetRowsParamsProxy.FailCallback: {0}", CallbackId);
-                return _js.InvokeVoidAsync("blazor_ag_grid.datasource_failCallback",
-                    CallbackId).AsTask();
+                return _module.InvokeVoidAsync("datasourceFail", CallbackId).AsTask();
             }
         }
     }
