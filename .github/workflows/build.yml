@@ -2,160 +2,74 @@ name: CI
 
 on:
   push:
-    branches: master
-    tags-ignore: v=*
+    branches: [ master ]
+    tags-ignore: [ 'v=*' ]
   create:
-    tags: v=*
   release:
-    types: [published]
-    tags: v=*
+    types: [ published ]
 
 jobs:
 
   build:
-    ## For now, .NET Core SDK 3.1 is only available on Windows
-    ##  https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners
-    #runs-on: ubuntu-16.04
-    #runs-on: ubuntu-latest
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
-      - name: checkout latest
-        uses: actions/checkout@v1
+      - name: checkout
+        uses: actions/checkout@v4
 
       - name: setup dotnet sdk
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.*
+          dotnet-version: 10.0.x
 
       - name: setup node (required for the ag-Grid interop esbuild bundle)
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: extract version base
-        id: extract_version_base
-        shell: pwsh
+      - name: build & pack
+        shell: bash
         run: |
-          ## Need to run this once to get the dotnet init message out of the way
-          dotnet msbuild ./Versions.props /t:DumpVersions /nologo
-
-          $vdumpJson = dotnet msbuild ./Versions.props /t:DumpVersions /nologo
-          Write-Output "Got Version Dump JSON:"
-          Write-Output $vdumpJson
-
-          $vdump = $vdumpJson | ConvertFrom-Json
-          Write-Output "Got Version Dump:"
-          Write-Output $vdump
-
-          ## Export as output and ENV VARS for subsequent steps
-          $versionBase = "$($vdump.Major).$($vdump.Minor).$($vdump.Patch)"
-          Write-Host "Found matching Tag Version info:"
-          Write-Host "  [$versionBase]"
-          Write-Host "::set-output name=version_base::$versionBase"
-          Write-Host "::set-env name=VERSION_BASE::$versionBase"
-
-      - name: compute build nums
-        uses: zyborg/gh-action-buildnum@v1.1.0
-        with:
-          gist_token: ${{ secrets.GIST_TOKEN }}
-          version_key: ${{ steps.extract_version_base.outputs.version_base }}
-          set_env: true
-
-      - name: compile & pack
-        shell: pwsh
-        run: |
-          Write-Host "Version Base = [$($env:VERSION_BASE)]"
-          Write-Host "Building with version = [$($env:BUILDNUM_FOR_VERSION)]"
-          dotnet build --configuration Release /p:VersionBuild=$env:BUILDNUM_FOR_VERSION
-          dotnet pack  --configuration Release /p:VersionBuild=$env:BUILDNUM_FOR_VERSION
+          # VersionBuild uses the built-in, monotonically increasing run number;
+          # Major/Minor/Patch come from Versions.props.
+          dotnet build --configuration Release -p:VersionBuild=${{ github.run_number }}
+          dotnet pack src/BlazorAgGrid/BlazorAgGrid.csproj \
+            --configuration Release -p:VersionBuild=${{ github.run_number }} \
+            --output ./artifacts
 
       - name: upload package as artifact
         if: startsWith(github.ref, 'refs/tags/v=')
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: package
-          path: src/BlazorAgGrid/bin/Release
-    
+          path: ./artifacts/*.nupkg
+
   push-nuget-preview:
     needs: build
-    if: (github.event_name == 'create')
-    #runs-on: ubuntu-latest
-    runs-on: windows-latest
+    if: github.event_name == 'create' && startsWith(github.ref, 'refs/tags/v=')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: download package from artifact
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: package
+          path: ./artifacts
 
-      - name: setup dotnet core sdk
-        uses: actions/setup-dotnet@v1.4.0
+      - name: setup dotnet sdk
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '3.1.100'
-          source-url: https://nuget.pkg.github.com/ebekker/index.json
-        env:
-          ## As per:
-          ##  https://github.com/marketplace/actions/setup-net-core-sdk?version=v1.4.0
-          NUGET_AUTH_TOKEN : ${{ secrets.GITHUB_TOKEN }}
+          dotnet-version: 10.0.x
 
-      - name: publish to GPR
-        shell: pwsh
-        env:
-          GPR_TOKEN : ${{ secrets.GITHUB_TOKEN }}
-        run:  |
-          $nupkg = dir package/BlazorAgGrid*.nupkg
-          #dotnet nuget push ($nupkg.FullName)
-          dotnet nuget push ($nupkg.FullName) -s https://nuget.pkg.github.com/ebekker/index.json -k $env:GPR_TOKEN
+      - name: publish to GitHub Packages (GPR)
+        shell: bash
+        run: |
+          dotnet nuget push ./artifacts/*.nupkg \
+            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --api-key "${{ secrets.GITHUB_TOKEN }}" \
+            --skip-duplicate
 
-  # push-nuget-preview:
-  #   needs: build
-  #   if: (github.event_name == 'create')
-  #   runs-on: ubuntu-16.04
-  #   steps:
-  #     - name: download package from artifact
-  #       uses: actions/download-artifact@v1
-  #       with:
-  #         name: package
-
-  #     - name: install nuget
-  #       ## Win only:
-  #       #uses: warrenbuckley/Setup-Nuget@v1
-  #       ## Linux
-  #       uses: olegtarasov/download-nuget@v1
-
-  #     - name: register nuget repo
-  #       ## As per:
-  #       ##  https://help.github.com/en/articles/configuring-nuget-for-use-with-github-package-registry
-  #       env:
-  #         #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         GITHUB_TOKEN: ${{ secrets.GPR_TOKEN }}
-  #       run: |
-  #         mono $NUGET_EXE sources Add -Name "GPR" \
-  #           -Source "https://nuget.pkg.github.com/ebekker/index.json" \
-  #           -UserName ebekker -Password $GITHUB_TOKEN
-  #         find . -name *.nupkg
-  #         mono $NUGET_EXE setapikey $GITHUB_TOKEN -Source "GPR"
-
-  #     - name: publish
-  #       run:  mono $NUGET_EXE push package/BlazorAgGrid*.nupkg -Source GPR
-
-## Future - when publishing to NuGet.org
-#  push-nuget-release:
-#    needs: build
-#    if: (github.event_name == 'release')
-#    runs-on: ubuntu-16.04
-#    steps:
-#      - name: download package from artifact
-#        uses: actions/download-artifact@v1
-#        with:
-#          name: package
-#
-#      - name: install nuget
-#        ## Win only:
-#        #uses: warrenbuckley/Setup-Nuget@v1
-#        ## Linux
-#        uses: olegtarasov/download-nuget@v1
-#
-#      - name: publish
-#        env:
-#          NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
-#        run: mono $NUGET_EXE push package/BlazorAgGrid*.nupkg -Source nuget.org -ApiKey $NUGET_TOKEN
+## Future - when publishing to NuGet.org, add a push-nuget-release job gated on
+## the `release` event that pushes ./artifacts/*.nupkg to nuget.org using a
+## NUGET_TOKEN secret.
