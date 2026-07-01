@@ -42,9 +42,8 @@ Here is a list of features that are currently supported:
 * Sorting
 * Various tweaks and customizations to the features above such as:
   * page size
-  * cell-selection suppression
+  * cell-focus suppression
   * datasource page caching
-  * row deselection
 * Grid API (the Column API is now unified into the Grid API, per ag-Grid v31+)
 * local JS script configuration
 * Works with both Blazor WASM and Blazor Server hosting models
@@ -191,8 +190,8 @@ such as from in-memory collection or from a back-end server.
 The `GridCallbacks` class defines all supported [Callbacks](https://www.ag-grid.com/javascript-grid-callbacks/)
 of ag-Grid.
 
-This is currently limited to resolving a Row Node ID when you provide
-a custom Datasource.
+This is currently limited to resolving a Row ID (`GetRowId`) when you provide
+a custom Datasource, and the data path (`GetDataPath`) for Tree Data.
 
 > NOTE: Grid Callbacks should ***NOT*** be used with the **Blazor Server** hosting model, see more details below.
 
@@ -224,15 +223,17 @@ registering JS-local callbacks or event handlers.
 See more details below about the Blazor Server hosting model where
 this comes in handy.
 
-## Grid & Column API
+## Grid API
 
-The Grid component exposes `Api` and `ColumnApi` properties that
-provide access to the corresponding ag-Grid APIs.
+The Grid component exposes an `Api` property that provides access to the
+ag-Grid Grid API. As of ag-Grid v31 the former Column API is unified into the
+Grid API, so column operations (e.g. auto-sizing) live on `Api` too. The
+`ColumnApi` property is retained as an `[Obsolete]` shim that delegates to
+`Api` for backwards compatibility — prefer `Api`.
 
-Currently each of these interfaces only contain a very small
-number of sample API methods to invoke.  Right now these include
-samples for column resizing and purging/refreshing the cache used
-for the `Infinite` row model type.
+This interface currently exposes a small number of sample methods, including
+column resizing/auto-sizing, CSV/Excel export, and purging/refreshing the cache
+used for the `Infinite` row model type.
 
 ## Blazor Hosting Modes
 
