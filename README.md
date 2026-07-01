@@ -7,9 +7,9 @@ Blazor WASM demo can be found [here](https://blog.bkkr.us/blazor-ag-grid).
 
 ----
 
-[![GitHub WorkFlow - CI](https://github.com/ebekker/blazor-ag-grid/workflows/CI/badge.svg)](https://github.com/ebekker/blazor-ag-grid/actions?CI)
-[![GitHub Release Notes (latest by date)](https://img.shields.io/github/v/release/ebekker/blazor-ag-grid?include_prereleases)](https://github.com/ebekker/blazor-ag-grid/releases/latest)
-[![GitHub Preview](https://img.shields.io/badge/github%20nuget-latest%20preview-orange)](https://github.com/ebekker/blazor-ag-grid/packages/112336)
+[![GitHub WorkFlow - CI](https://github.com/arunmmanoharan/blazor-ag-grid/workflows/CI/badge.svg)](https://github.com/arunmmanoharan/blazor-ag-grid/actions?CI)
+[![GitHub Release Notes (latest by date)](https://img.shields.io/github/v/release/arunmmanoharan/blazor-ag-grid?include_prereleases)](https://github.com/arunmmanoharan/blazor-ag-grid/releases/latest)
+[![GitHub Preview](https://img.shields.io/badge/github%20nuget-latest%20preview-orange)](https://github.com/arunmmanoharan/blazor-ag-grid/packages)
 
 <!-- FUTURE when we publish to nuget.org
 [![Nuget  Release](https://img.shields.io/nuget/v/BlazorAgGrid)](https://www.nuget.org/packages/Zyborg.AWS.Lambda.Kerberos/)
