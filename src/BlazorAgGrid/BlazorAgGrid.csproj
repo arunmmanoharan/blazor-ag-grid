@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <RazorLangVersion>3.0</RazorLangVersion>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -18,8 +19,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="3.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" />
   </ItemGroup>
+
+  <!-- Bundle the ag-Grid interop (ag-grid-community + ag-grid-enterprise) into
+       wwwroot/blazor-ag-grid.js via esbuild before the C# build. Requires Node
+       on PATH. Only re-runs when the interop source or build config changes. -->
+  <Target Name="BuildInteropBundle" BeforeTargets="BeforeBuild"
+          Inputs="interop/blazor-ag-grid.js;package.json;package-lock.json;esbuild.mjs"
+          Outputs="wwwroot/blazor-ag-grid.js">
+    <Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)"
+          Condition="!Exists('$(MSBuildProjectDirectory)/node_modules')" />
+    <Exec Command="npm run build" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
 
 </Project>
