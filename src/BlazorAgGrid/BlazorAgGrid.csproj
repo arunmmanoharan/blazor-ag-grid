@@ -23,31 +23,31 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" />
   </ItemGroup>
 
+  <!-- The interop bundle is generated during the build (see below). Exclude it
+       from the SDK's evaluation-time wwwroot/** Content glob so it is never
+       double-registered as a static web asset; the target adds it back exactly
+       once after generating it. -->
+  <ItemGroup>
+    <Content Remove="wwwroot\blazor-ag-grid.js" />
+  </ItemGroup>
+
   <!-- Bundle the ag-Grid interop (ag-grid-community + ag-grid-enterprise) into
        wwwroot/blazor-ag-grid.js via esbuild. Requires Node on PATH. Only re-runs
        when the interop source or build config changes.
 
-       IMPORTANT: this must run BEFORE ResolveStaticWebAssetsInputs, which globs
-       wwwroot/ to discover static web assets. The bundle is git-ignored and
-       generated here, so on a clean checkout it does not exist when the project
-       is evaluated. Running only at BeforeBuild let the SWA glob miss it, so the
-       bundle was absent from publish/pack output (and _content/BlazorAgGrid/…
-       404'd at runtime). Generating it before the SWA input resolution ensures
-       it is picked up as a static web asset. -->
+       Must run BEFORE ResolveStaticWebAssetsInputs. The bundle is git-ignored and
+       generated here, so on a clean checkout it does not exist at evaluation time
+       and the default wwwroot glob would miss it — which left it out of
+       publish/pack output (and _content/BlazorAgGrid/… 404'd at runtime). We
+       exclude it from the glob above and add it as Content here, after it exists. -->
   <Target Name="BuildInteropBundle" BeforeTargets="BeforeBuild;ResolveStaticWebAssetsInputs"
           Inputs="interop/blazor-ag-grid.js;package.json;package-lock.json;esbuild.mjs"
           Outputs="wwwroot/blazor-ag-grid.js">
     <Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)"
           Condition="!Exists('$(MSBuildProjectDirectory)/node_modules')" />
     <Exec Command="npm run build" WorkingDirectory="$(MSBuildProjectDirectory)" />
-    <!-- The SDK globs wwwroot/** for Content at evaluation time, before this
-         target runs. On a clean checkout the bundle does not exist yet, so it is
-         missed by that glob. Re-register it explicitly (Remove then Include keeps
-         exactly one item whether or not the glob already caught it) so it is
-         published/packed as a static web asset. -->
     <ItemGroup>
-      <Content Remove="wwwroot/blazor-ag-grid.js" />
-      <Content Include="wwwroot/blazor-ag-grid.js" />
+      <Content Include="wwwroot\blazor-ag-grid.js" />
     </ItemGroup>
   </Target>
 

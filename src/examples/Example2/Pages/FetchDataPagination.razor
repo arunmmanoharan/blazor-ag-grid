@@ -4,8 +4,9 @@
 
 <p>
     This component demonstrates client-side pagination over an in-memory dataset
-    of @rows.Count rows. Change the page size or let ag-Grid auto-size the page to
-    fit the grid height. Columns are sortable, filterable and resizable.
+    of @rows.Count rows. Use the grid's page-size selector, or enable auto page
+    size to fit the number of rows to the grid height. Columns are sortable,
+    filterable and resizable.
 </p>
 
 @if (gridOpts == null)
@@ -14,22 +15,16 @@
 }
 else
 {
-    <div class="form-inline mb-2">
-        <label class="mr-2">Rows per page:</label>
-        <select class="form-control mr-3" @onchange="OnPageSizeChanged" disabled="@autoPageSize">
-            @foreach (var size in PageSizes)
-            {
-                <option value="@size" selected="@(size == pageSize)">@size</option>
-            }
-        </select>
-        <label class="mr-2">
+    <div class="mb-2">
+        <label>
             <input type="checkbox" checked="@autoPageSize" @onchange="OnAutoPageSizeChanged" />
             Auto page size (fit to grid height)
         </label>
     </div>
 
-    @* @key forces the grid to be recreated when pagination settings change,
-       since GridOptions are applied once when the grid is created. *@
+    @* @key recreates the grid when the auto-page-size toggle changes, since
+       GridOptions are applied once when the grid is created. Page-size changes
+       within a fixed set are handled live by ag-Grid's own selector. *@
     <AgGrid @key="gridKey" WidthStyle="100%" HeightStyle="400px" Options="gridOpts">
         <GridColumn Header="ID" Field="id" IsSortable="true" Width="90" />
         <GridColumn Header="Product" Field="product" IsSortable="true" IsFiltered="true" />
@@ -40,9 +35,6 @@ else
 }
 
 @code {
-    private static readonly int[] PageSizes = { 5, 10, 20, 50 };
-
-    private int pageSize = 10;
     private bool autoPageSize = false;
     private int gridKey = 0;
 
@@ -62,32 +54,22 @@ else
             RowModelType = RowModelType.ClientSide,
             RowData = rows,
             EnablePagination = true,
-            // When auto page size is on, ag-Grid computes the page size from the
-            // available height, so PaginationPageSize must be left unset.
-            PaginationPageSize = autoPageSize ? (int?)null : pageSize,
-            EnablePaginationAutoPageSize = autoPageSize ? true : (bool?)null,
             AnimateRows = true,
             DefaultColDef = new DefaultColDef { Resizable = true },
-        };
-    }
 
-    private void OnPageSizeChanged(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out var size))
-        {
-            pageSize = size;
-            Recreate();
-        }
+            // Auto page size computes the page size from the grid height, so the
+            // fixed page size and its selector must be turned off in that mode.
+            PaginationPageSize = autoPageSize ? (int?)null : 10,
+            EnablePaginationAutoPageSize = autoPageSize ? true : (bool?)null,
+            // The default page size (10) is included so it matches the selector
+            // and ag-Grid does not warn (#94/#95).
+            PaginationPageSizeSelector = autoPageSize ? (object)false : new[] { 5, 10, 20, 50 },
+        };
     }
 
     private void OnAutoPageSizeChanged(ChangeEventArgs e)
     {
         autoPageSize = e.Value is bool b && b;
-        Recreate();
-    }
-
-    private void Recreate()
-    {
         BuildOptions();
         // Bump the key so Blazor disposes the current grid and creates a new one
         // with the updated pagination options.

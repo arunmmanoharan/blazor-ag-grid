@@ -25,6 +25,13 @@ namespace BlazorAgGrid
         /// If paginationAutoPageSize is specified, this property is ignored.
         /// See example Customising Pagination.
         public int? PaginationPageSize { get; set; }
+        /// Page-size options for the built-in pagination selector. Provide a list
+        /// of sizes (which MUST include <see cref="PaginationPageSize"/>), or set
+        /// to <c>false</c> to hide the selector. When null, ag-Grid uses its
+        /// default options ([20, 50, 100]); pairing that with a PaginationPageSize
+        /// that is not in the default list triggers ag-Grid warnings #94/#95.
+        [JsonPropertyName("paginationPageSizeSelector")]
+        public object PaginationPageSizeSelector { get; set; }
         /// True - The number of rows to load per page is automatically adjusted
         /// by ag-Grid so each page shows enough rows to just fill the area
         /// designated for the grid. False (Default) - paginationPageSize is used.
