@@ -83,7 +83,7 @@ and edit it to include the package source for this repo:
     <!--To inherit the global NuGet package sources remove the <clear/> line below -->
     <clear />
     <add key="nuget" value="https://api.nuget.org/v3/index.json" />
-    <add key="github" value="https://nuget.pkg.github.com/ebekker/index.json" />
+    <add key="github" value="https://nuget.pkg.github.com/arunmmanoharan/index.json" />
   </packageSources>
 </configuration>
 ```
@@ -99,6 +99,41 @@ PS> dotnet add package BlazorAgGrid
 
 > **Requirements:** .NET 10 (net10.0). The library and all example projects
 > target net10.0.
+
+### Quick start
+
+Make the component available by adding this to your `_Imports.razor`:
+
+```razor
+@using BlazorAgGrid
+```
+
+Then drop a grid onto any page. This minimal example uses inline columns and
+row data — no code-behind, no `<head>` changes, no CSS references:
+
+```razor
+@page "/grid-demo"
+
+<AgGrid HeightStyle="300px" WidthStyle="100%">
+    <GridColumn Header="Make"  Field="make"  IsSortable="true" IsFiltered="true" />
+    <GridColumn Header="Model" Field="model" IsSortable="true" />
+    <GridColumn Header="Price" Field="price" IsSortable="true" />
+
+    <GridRow Data="@(new { make = "Toyota",  model = "Celica",  price = 35000 })" />
+    <GridRow Data="@(new { make = "Ford",    model = "Mondeo",  price = 32000 })" />
+    <GridRow Data="@(new { make = "Porsche", model = "Boxster", price = 72000 })" />
+</AgGrid>
+```
+
+That's a complete, working Community grid. For programmatic data, bind the
+`Options` parameter to a `GridOptions` instance (set `RowData`, pagination,
+selection, etc.) instead of inline `<GridRow>` children — see
+[Configuration](#configuration) and the [example projects](src/examples).
+
+**Enterprise features** (row grouping, master/detail, Excel export, the
+tool-panel sidebar, …) work without any extra registration, but show a trial
+watermark until you supply a license key — see
+[Enterprise license](#enterprise-license) below.
 
 ### ag-Grid Assets
 
