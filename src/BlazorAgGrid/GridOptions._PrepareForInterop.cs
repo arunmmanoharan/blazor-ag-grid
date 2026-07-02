@@ -1,4 +1,4 @@
-﻿using Microsoft.JSInterop;
+using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,24 +16,29 @@ namespace BlazorAgGrid
         internal event EventHandler<PrepareForInteropEventArgs> PrepareForInterop;
 
         // Invoke any registered event handler with an instance of the JS
-        // runtime which can be used by any interop proxies or surrogates
-        internal virtual void FirePrepareForInterop(IJSRuntime js)
+        // runtime and the interop module which can be used by any interop
+        // proxies or surrogates
+        internal virtual void FirePrepareForInterop(IJSRuntime js, IJSObjectReference module)
         {
-            var ev = new PrepareForInteropEventArgs(js);
+            var ev = new PrepareForInteropEventArgs(js, module);
             PrepareForInterop?.Invoke(this, ev);
         }
 
         // Registered event handlers will be passed an instance
         // of this event argument, which contains a reference to
-        // the JS runtime, and other possible state in the future
+        // the JS runtime, the interop module, and other possible
+        // state in the future
         internal class PrepareForInteropEventArgs : EventArgs
         {
-            public PrepareForInteropEventArgs(IJSRuntime js)
+            public PrepareForInteropEventArgs(IJSRuntime js, IJSObjectReference module)
             {
                 JS = js;
+                Module = module;
             }
 
             public IJSRuntime JS { get; }
+
+            public IJSObjectReference Module { get; }
         }
     }
 }

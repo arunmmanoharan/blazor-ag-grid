@@ -1,15 +1,15 @@
 # blazor-ag-grid
 Blazor-wrapped component over [ag-Grid](https://github.com/ag-grid/ag-grid).
 
-:star: I appreciate your star, it helps me decide to which OSS projects I should allocate my spare time.
-
-Blazor WASM demo can be found [here](https://blog.bkkr.us/blazor-ag-grid).
+> **This is a fork of [ebekker/blazor-ag-grid](https://github.com/ebekker/blazor-ag-grid).**
+> Huge thanks to [@ebekker](https://github.com/ebekker) for this amazing package — this fork
+> upgrades it to ag-Grid v36 (Enterprise) and .NET 10. All original credit goes to him.
 
 ----
 
-[![GitHub WorkFlow - CI](https://github.com/ebekker/blazor-ag-grid/workflows/CI/badge.svg)](https://github.com/ebekker/blazor-ag-grid/actions?CI)
-[![GitHub Release Notes (latest by date)](https://img.shields.io/github/v/release/ebekker/blazor-ag-grid?include_prereleases)](https://github.com/ebekker/blazor-ag-grid/releases/latest)
-[![GitHub Preview](https://img.shields.io/badge/github%20nuget-latest%20preview-orange)](https://github.com/ebekker/blazor-ag-grid/packages/112336)
+[![GitHub WorkFlow - CI](https://github.com/arunmmanoharan/blazor-ag-grid/workflows/CI/badge.svg)](https://github.com/arunmmanoharan/blazor-ag-grid/actions?CI)
+[![GitHub Release Notes (latest by date)](https://img.shields.io/github/v/release/arunmmanoharan/blazor-ag-grid?include_prereleases)](https://github.com/arunmmanoharan/blazor-ag-grid/releases/latest)
+[![GitHub Preview](https://img.shields.io/badge/github%20nuget-latest%20preview-orange)](https://github.com/arunmmanoharan/blazor-ag-grid/packages)
 
 <!-- FUTURE when we publish to nuget.org
 [![Nuget  Release](https://img.shields.io/nuget/v/BlazorAgGrid)](https://www.nuget.org/packages/Zyborg.AWS.Lambda.Kerberos/)
@@ -42,13 +42,16 @@ Here is a list of features that are currently supported:
 * Sorting
 * Various tweaks and customizations to the features above such as:
   * page size
-  * cell-selection suppression
+  * cell-focus suppression
   * datasource page caching
-  * row deselection
-* Grid and Column APIs
+* Grid API (the Column API is now unified into the Grid API, per ag-Grid v31+)
 * local JS script configuration
 * Works with both Blazor WASM and Blazor Server hosting models
   (with some caveats)
+* ag-Grid **v36** with the Theming API (Quartz/Balham/Alpine/Material)
+* Curated v36 options: quick filter, column & floating filters, `defaultColDef`,
+  animated rows, CSV/Excel export, row grouping & aggregation, master/detail,
+  and the tool-panel sidebar (Enterprise features require a license)
 
 ## Examples
 
@@ -58,8 +61,7 @@ some typical usage under different scenarios:
 * [Example1](src/examples/Example1) - demonstrates
   Blazor WASM + ASP.NET Core hosted example
 * [Example2](src/examples/Example2) - similar to Example1 but this
-  is purely WASM client with no back-end.  This Example is the one
-  that is used for the [public demo](https://blog.bkkr.us/blazor-ag-grid/).
+  is purely WASM client with no back-end.
 * [Example3](src/examples/Example3) - demonstrates Blazor Server
   hosting model.  This is an adaptation of Example1 and
   demonstrates some of the caveats that need to be considered
@@ -80,7 +82,7 @@ and edit it to include the package source for this repo:
     <!--To inherit the global NuGet package sources remove the <clear/> line below -->
     <clear />
     <add key="nuget" value="https://api.nuget.org/v3/index.json" />
-    <add key="github" value="https://nuget.pkg.github.com/ebekker/index.json" />
+    <add key="github" value="https://nuget.pkg.github.com/arunmmanoharan/index.json" />
   </packageSources>
 </configuration>
 ```
@@ -94,43 +96,93 @@ Then add the nuget to your project:
 PS> dotnet add package BlazorAgGrid
 ```
 
+> **Requirements:** .NET 10 (net10.0). The library and all example projects
+> target net10.0.
+
+### Quick start
+
+Make the component available by adding this to your `_Imports.razor`:
+
+```razor
+@using BlazorAgGrid
+```
+
+Then drop a grid onto any page. This minimal example uses inline columns and
+row data — no code-behind, no `<head>` changes, no CSS references:
+
+```razor
+@page "/grid-demo"
+
+<AgGrid HeightStyle="300px" WidthStyle="100%">
+    <GridColumn Header="Make"  Field="make"  IsSortable="true" IsFiltered="true" />
+    <GridColumn Header="Model" Field="model" IsSortable="true" />
+    <GridColumn Header="Price" Field="price" IsSortable="true" />
+
+    <GridRow Data="@(new { make = "Toyota",  model = "Celica",  price = 35000 })" />
+    <GridRow Data="@(new { make = "Ford",    model = "Mondeo",  price = 32000 })" />
+    <GridRow Data="@(new { make = "Porsche", model = "Boxster", price = 72000 })" />
+</AgGrid>
+```
+
+That's a complete, working Community grid. For programmatic data, bind the
+`Options` parameter to a `GridOptions` instance (set `RowData`, pagination,
+selection, etc.) instead of inline `<GridRow>` children — see
+[Configuration](#configuration) and the [example projects](src/examples).
+
+**Enterprise features** (row grouping, master/detail, Excel export, the
+tool-panel sidebar, …) work without any extra registration, but show a trial
+watermark until you supply a license key — see
+[Enterprise license](#enterprise-license) below.
+
 ### ag-Grid Assets
 
-To use this component you'll need to add a few basic resource
-references to ag-Grid assets such as CSS and JS files as described
-in the [docs](https://www.ag-grid.com/javascript-grid/#add-ag-grid-to-your-project).
+**Nothing to add to your `<head>`.** This component targets **ag-Grid v36**
+and bundles ag-Grid (community + enterprise) together with the Blazor interop
+into a single JS module (`_content/BlazorAgGrid/blazor-ag-grid.js`) that the
+`<AgGrid>` component imports on demand. Styling is handled by the ag-Grid
+[Theming API](https://www.ag-grid.com/javascript-data-grid/theming/) — no CSS
+`<link>` tags and no CDN `<script>` references are required (or supported).
 
-Add this to the `<head>` section of your `index.html` file.
+> **Build prerequisite:** the interop bundle is produced by esbuild at build
+> time, so **Node.js must be on `PATH`** when you build the `BlazorAgGrid`
+> package (CI included). Consuming apps that reference the published NuGet get
+> the pre-built bundle and do not need Node.
 
-```javascript
-    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css">
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-balham.css">
+### Theming
+
+Set the `Theme` parameter to pick a built-in theme (default `Quartz`):
+
+```razor
+<AgGrid Theme="GridTheme.Balham" Options="gridOpts">...</AgGrid>
 ```
 
-The last line _assumes_ you're using the [`Balham` theme](https://www.ag-grid.com/javascript-grid-themes-provided/#balham-themes).
-If you choose to use another [theme](https://www.ag-grid.com/javascript-grid-styling/),
-adjust appropriately.
+Available: `Quartz` (default), `Balham`, `Alpine`, `Material`.
 
-### Blazor ag-Grid Assets and Component
+### Enterprise license
 
-Next you want to add a reference to the JS interop support file
-specific to this Blazor component by also adding this to your
-`<head>` section:
+ag-Grid **Enterprise** features require a commercial license. Provide the key
+at runtime — **never hardcode or commit it.** Preferred: configure it once via
+DI, sourced from configuration (environment variable, user-secrets, or an
+approved secret store such as Azure Key Vault):
 
-```javascript
-    <script src="_content/BlazorAgGrid/blazor-ag-grid.js"></script>
+```csharp
+builder.Services.AddBlazorAgGrid(o => o.LicenseKey = builder.Configuration["AgGridLicenseKey"]);
 ```
 
-Finally, in your Blazor pages, drop in the `<AgGrid>` component
-wherever you want to use it and configure with these properties
-and child compoenents:
+Or per-grid via the `LicenseKey` parameter. Without a key the grid still runs
+in watermarked trial mode.
+
+### Component
+
+In your Blazor pages, drop in the `<AgGrid>` component wherever you want to use
+it and configure with these properties and child components:
 
 * Properties:
   * `WidthStyle` & `HeightStyle`
   * `Options`, `Callbacks` and `Events` (see below)
+  * `Theme` (see above) and `LicenseKey`
 * Child Components:
-  * `<ColumnDefinition>`
+  * `<GridColumn>` / `<ColumnDefinition>`
   * `<RowData>`
 
 See the [example projects](src/examples) as described above for
@@ -142,7 +194,7 @@ In general, this Blazor component tries to follow the configuration
 approach of the native ag-Grid control, which is primarily to use the
 [Grid Options](https://www.ag-grid.com/javascript-grid-reference-overview/#grid-options) interface.
 However, because of the need to perform
-[JS Interop](https://docs.microsoft.com/en-us/aspnet/core/blazor/javascript-interop?view=aspnetcore-3.1) between the .NET and the JS
+[JS Interop](https://learn.microsoft.com/en-us/aspnet/core/blazor/javascript-interop?view=aspnetcore-10.0&preserve-view=true) between the .NET and the JS
 runtimes, there are some challenges to simply using the Grid Options
 interface natively.
 
@@ -172,10 +224,17 @@ such as from in-memory collection or from a back-end server.
 The `GridCallbacks` class defines all supported [Callbacks](https://www.ag-grid.com/javascript-grid-callbacks/)
 of ag-Grid.
 
-This is currently limited to resolving a Row Node ID when you provide
-a custom Datasource.
+This is currently limited to resolving a Row ID (`GetRowId`) when you provide
+a custom Datasource, and the data path (`GetDataPath`) for Tree Data.
 
-> NOTE: Grid Callbacks should ***NOT*** be used with the **Blazor Server** hosting model, see more details below.
+> ⚠️ **WASM only.** Grid Callbacks are invoked by ag-Grid **synchronously** — it
+> calls them inline and uses the return value immediately — so they rely on
+> synchronous JS→.NET interop, which is **not supported on Blazor Server**
+> (interop there runs over SignalR and must be asynchronous). Use `GridCallbacks`
+> only with Blazor WebAssembly. On Blazor Server, supply the same logic in
+> browser-side JS via the [`ConfigureScript`](#grid-configuration-script)
+> parameter instead. (Grid **Events** and the custom **Datasource** use async
+> interop and work on both hosting models.)
 
 ### Grid Events
 
@@ -205,20 +264,22 @@ registering JS-local callbacks or event handlers.
 See more details below about the Blazor Server hosting model where
 this comes in handy.
 
-## Grid & Column API
+## Grid API
 
-The Grid component exposes `Api` and `ColumnApi` properties that
-provide access to the corresponding ag-Grid APIs.
+The Grid component exposes an `Api` property that provides access to the
+ag-Grid Grid API. As of ag-Grid v31 the former Column API is unified into the
+Grid API, so column operations (e.g. auto-sizing) live on `Api` too. The
+`ColumnApi` property is retained as an `[Obsolete]` shim that delegates to
+`Api` for backwards compatibility — prefer `Api`.
 
-Currently each of these interfaces only contain a very small
-number of sample API methods to invoke.  Right now these include
-samples for column resizing and purging/refreshing the cache used
-for the `Infinite` row model type.
+This interface currently exposes a small number of sample methods, including
+column resizing/auto-sizing, CSV/Excel export, and purging/refreshing the cache
+used for the `Infinite` row model type.
 
 ## Blazor Hosting Modes
 
 This component has been developed and tested to work with both
-WebAssembly and Server [hosting models](https://docs.microsoft.com/en-us/aspnet/core/blazor/hosting-models?view=aspnetcore-3.1)
+WebAssembly and Server [hosting models](https://learn.microsoft.com/en-us/aspnet/core/blazor/hosting-models?view=aspnetcore-10.0&preserve-view=true)
 currently supported by Blazor.
 
 For Blazor WASM hosting model, all features should work as expected.
@@ -238,9 +299,9 @@ the ag-Grid instance is calling into _your_ code to resolve some data
 and ag-Grid does not support asynchronous invocations for any of the
 callback functions.
 
-There is an _out_ for this scenario.  This Blazor compenent does
+There is an _out_ for this scenario.  This Blazor component does
 support an optional `ConfigureScript` parameter as described above.
-As long as your logic can be specified and implementd fully in
+As long as your logic can be specified and implemented fully in
 browser-side JS code, you can use this parameter to inject your own
 logic such as adding callbacks and event handlers on the Grid Options
 instance just before the Grid instance is created.

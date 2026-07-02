@@ -65,14 +65,13 @@ else
         {
             Datasource = dataSource,
             EnablePagination = true,
-            EnableRowDeselection = true,
             RowModelType = RowModelType.Infinite,
             RowSelection = RowSelection.Single,
-            SuppressCellSelection = true,
+            SuppressCellFocus = true,
         };
         photoCb = new GridCallbacks
         {
-            GetRowNodeId = node =>
+            GetRowId = node =>
             {
                 var id = node.GetProperty("id").ToString();
                 Console.WriteLine($"Got node: [{id}]");
@@ -98,7 +97,7 @@ else
 
     private async Task SizeToFitCols500()
     {
-        await photoGrid.ColumnApi.SizeColumnsToFit(500);
+        await photoGrid.Api.SizeColumnsToFit();
     }
 
     private async Task AutosizeCols()
@@ -111,7 +110,7 @@ else
             "url",
             "thumbnailUrl",
         };
-        await photoGrid.ColumnApi.AutoSizeColumns(colKeys);
+        await photoGrid.Api.AutoSizeColumns(colKeys);
     }
 
     private async Task RefreshRows()
@@ -173,7 +172,7 @@ else
 
                 if (!string.IsNullOrWhiteSpace(Search))
                 {
-                    url += $"&q={Uri.EscapeUriString(Search)}";
+                    url += $"&q={Uri.EscapeDataString(Search)}";
                 }
 
                 Console.WriteLine("Fetching from [{0}]", url);

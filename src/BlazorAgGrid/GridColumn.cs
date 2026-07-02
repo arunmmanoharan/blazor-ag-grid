@@ -17,6 +17,15 @@ namespace BlazorAgGrid
         [Parameter] public bool IsFiltered { get; set; }
         [Parameter] public bool IsEditable { get; set; }
 
+        // v36 feature column options
+        [Parameter] public bool? FloatingFilter { get; set; }
+        [Parameter] public bool? RowGroup { get; set; }
+        [Parameter] public string AggFunc { get; set; }
+        [Parameter] public bool? EnableValue { get; set; }
+        [Parameter] public bool? Pivot { get; set; }
+        [Parameter] public bool? Hide { get; set; }
+        [Parameter] public int? Width { get; set; }
+
         protected override void OnInitialized()
         {
             ColumnDefinitions.Add(new ColumnDefinition
@@ -27,7 +36,14 @@ namespace BlazorAgGrid
                 IsSortable = IsSortable,
                 IsFiltered = IsFiltered,
                 IsEditable = IsEditable,
-            }); ;
+                FloatingFilter = FloatingFilter,
+                RowGroup = RowGroup,
+                AggFunc = AggFunc,
+                EnableValue = EnableValue,
+                Pivot = Pivot,
+                Hide = Hide,
+                Width = Width,
+            });
         }
     }
 }

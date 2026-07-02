@@ -1,4 +1,4 @@
-﻿using Microsoft.JSInterop;
+using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,25 +7,36 @@ using System.Threading.Tasks;
 namespace BlazorAgGrid
 {
     /// <summary>
-    /// Strongly-typed access to:
-    ///   https://www.ag-grid.com/javascript-grid-api/
+    /// Strongly-typed access to the ag-Grid Grid API:
+    ///   https://www.ag-grid.com/javascript-data-grid/grid-api/
+    /// As of ag-Grid v31 the former Column API is unified into this Grid API,
+    /// so column operations (e.g. auto-sizing) live here too.
     /// </summary>
     public class GridApi
     {
-        internal string CallGridApi = "blazor_ag_grid.gridOptions_callGridApi";
+        private readonly IJSObjectReference _module;
+        private readonly string _id;
 
-        private IJSRuntime _js;
-        private string _id;
-
-        internal GridApi(IJSRuntime js, string id)
+        internal GridApi(IJSObjectReference module, string id)
         {
-            _js = js;
+            _module = module;
             _id = id;
         }
 
         public Task SizeColumnsToFit()
         {
             return CallApi("sizeColumnsToFit");
+        }
+
+        public Task AutoSizeColumn(string colKey)
+        {
+            return CallApi("autoSizeColumn", colKey);
+        }
+
+        public Task AutoSizeColumns(string[] colKeys)
+        {
+            // Cast to make sure the array arg is not unwound into separate args
+            return CallApi("autoSizeColumns", (object)colKeys);
         }
 
         public Task RefreshCells(RefreshCellsParams @params = null)
@@ -54,14 +65,37 @@ namespace BlazorAgGrid
             return CallApi("purgeInfiniteCache");
         }
 
+        /// <summary>Exports the grid data as CSV, triggering a browser download.</summary>
+        public Task ExportDataAsCsv(object @params = null)
+        {
+            if (@params == null)
+                return CallApi("exportDataAsCsv");
+            else
+                return CallApi("exportDataAsCsv", @params);
+        }
+
+        /// <summary>Exports the grid data as Excel (Enterprise), triggering a browser download.</summary>
+        public Task ExportDataAsExcel(object @params = null)
+        {
+            if (@params == null)
+                return CallApi("exportDataAsExcel");
+            else
+                return CallApi("exportDataAsExcel", @params);
+        }
+
         public Task SetDatasource(IGridDatasource ds = null)
         {
-            return _js.InvokeVoidAsync("blazor_ag_grid.gridOptions_setDatasource", _id, ds).AsTask();
+            if (ds == null)
+                return _module.InvokeVoidAsync("setDatasource", _id, (object)null).AsTask();
+
+            var proxy = DotNetObjectReference.Create(
+                new GridOptions.InteropDatasourceProxy(_module, ds));
+            return _module.InvokeVoidAsync("setDatasource", _id, proxy).AsTask();
         }
 
         private Task CallApi(string name, params object[] args)
         {
-            return _js.InvokeVoidAsync(CallGridApi, _id, name, args).AsTask();
+            return _module.InvokeVoidAsync("callGridApi", _id, name, args).AsTask();
         }
 
         public class RefreshCellsParams

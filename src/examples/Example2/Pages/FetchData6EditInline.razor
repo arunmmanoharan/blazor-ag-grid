@@ -45,8 +45,7 @@ else
 
         gridOpts = new GridOptions
         {
-            EnableRowDeselection = true,
-            SuppressCellSelection = true,
+            SuppressCellFocus = true,
 
             RowModelType = RowModelType.ClientSide,
             RowData = EditSampleData.Sample,
@@ -59,7 +58,7 @@ else
         {
             // Register a custom Row ID resolver to see how it
             // gets returned to us in the cellValueChanged event
-            GetRowNodeId = json =>
+            GetRowId = json =>
                 $"{json.GetProperty("firstName").GetString()}.{json.GetProperty("lastName").GetString()}.{id++}",
         };
 

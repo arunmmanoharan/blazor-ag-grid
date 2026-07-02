@@ -4,8 +4,8 @@
         <!-- these should be manually bumped as needed to
              indicate the current version being worked on -->
         <VersionMajor>0</VersionMajor>
-        <VersionMinor>5</VersionMinor>
-        <VersionPatch>3</VersionPatch>
+        <VersionMinor>6</VersionMinor>
+        <VersionPatch>0</VersionPatch>
         <!-- this should be overridden by CI automation -->
         <VersionBuild>0</VersionBuild>
 

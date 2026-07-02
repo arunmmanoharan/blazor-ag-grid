@@ -1,0 +1,16 @@
+{
+  "name": "blazor-ag-grid-interop",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.mjs"
+  },
+  "dependencies": {
+    "ag-grid-community": "36.0.0",
+    "ag-grid-enterprise": "36.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

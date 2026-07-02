@@ -15,13 +15,10 @@
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link href="css/site.css" rel="stylesheet" />
 
-    <!--
-      as per: https://www.ag-grid.com/javascript-grid/#add-ag-grid-to-your-project
-      -->
-    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css">
-    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-balham.css">
-    <script src="_content/BlazorAgGrid/blazor-ag-grid.js"></script>
+    <!-- ag-Grid (community + enterprise) and the Blazor interop are bundled by the
+         BlazorAgGrid package and loaded as a JS module by the component; styling
+         comes from the ag-Grid Theming API. Nothing to add here.
+         example4.js provides the ConfigureScript demo used on the Server model. -->
     <script src="example4.js"></script>
 </head>
 <body>

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Example3.Data;
+using BlazorAgGrid;
 
 namespace Example3
 {
@@ -30,6 +31,9 @@ namespace Example3
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
             services.AddHttpClient();
+
+            // Optional ag-Grid Enterprise license key from configuration; never commit a key.
+            services.AddBlazorAgGrid(o => o.LicenseKey = Configuration["AgGridLicenseKey"]);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

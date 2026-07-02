@@ -45,8 +45,7 @@ else
         {
             Datasource = new WeatherDataSource { Service = ForecastService },
             RowModelType = RowModelType.Infinite,
-            EnableRowDeselection = true,
-            SuppressCellSelection = true,
+            SuppressCellFocus = true,
         };
     }
 

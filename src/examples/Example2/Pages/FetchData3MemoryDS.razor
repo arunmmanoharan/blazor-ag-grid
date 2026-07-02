@@ -43,8 +43,7 @@ else
         {
             Datasource = new WeatherDataSource { Http = Http },
             RowModelType = RowModelType.Infinite,
-            EnableRowDeselection = true,
-            SuppressCellSelection = true,
+            SuppressCellFocus = true,
         };
     }
 
