@@ -1,0 +1,76 @@
+name: Deploy showcase site to GitHub Pages
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'site/**'
+      - 'src/examples/Example2/**'
+      - 'src/BlazorAgGrid/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+# Allow the deploy job to publish to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One in-flight Pages deployment at a time
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: setup dotnet sdk
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: build landing page (Vite)
+        working-directory: site
+        run: |
+          npm ci
+          npm run build
+
+      - name: publish Example2 (Blazor WASM)
+        run: dotnet publish src/examples/Example2/Example2.csproj -c Release -o publish
+
+      - name: assemble live demo into the site build
+        run: |
+          set -euo pipefail
+          mkdir -p site/dist/demo
+          cp -r publish/wwwroot/. site/dist/demo/
+          # Blazor WASM served from a project subpath needs a matching <base href>.
+          sed -i 's#<head>#<head>\n    <base href="/blazor-ag-grid/demo/" />#' site/dist/demo/index.html
+          # SPA deep-link fallback (GitHub Pages has no server-side routing).
+          cp site/dist/demo/index.html site/dist/demo/404.html
+          # Ensure underscore-prefixed folders (_framework, assets) are served.
+          touch site/dist/.nojekyll
+
+      - name: upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
