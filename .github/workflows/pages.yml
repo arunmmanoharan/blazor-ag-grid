@@ -54,8 +54,9 @@ jobs:
           cp -r publish/wwwroot/. site/dist/demo/
           # Blazor WASM served from a project subpath needs a matching <base href>.
           sed -i 's#<head>#<head>\n    <base href="/blazor-ag-grid/demo/" />#' site/dist/demo/index.html
-          # SPA deep-link fallback (GitHub Pages has no server-side routing).
-          cp site/dist/demo/index.html site/dist/demo/404.html
+          # SPA deep-link fallback is the single root dist/404.html (from
+          # site/public/404.html) — GitHub Pages only honors a root 404.html,
+          # not per-subfolder ones.
           # Ensure underscore-prefixed folders (_framework, assets) are served.
           touch site/dist/.nojekyll
 

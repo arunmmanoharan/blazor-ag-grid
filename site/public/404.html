@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting…</title>
+    <script>
+      // GitHub Pages serves this single root 404.html for any unmatched path
+      // (it ignores 404.html files inside subfolders). Recover into the right
+      // single-page app instead of showing GitHub's generic 404:
+      //   * /blazor-ag-grid/demo/*  -> the Blazor WASM demo (its client router
+      //     then takes over from the demo home)
+      //   * anything else           -> the React landing page
+      (function () {
+        var base = '/blazor-ag-grid/';
+        var path = window.location.pathname;
+        var target = path.indexOf(base + 'demo/') === 0 ? base + 'demo/' : base;
+        window.location.replace(target + window.location.hash);
+      })();
+    </script>
+    <meta http-equiv="refresh" content="0; url=/blazor-ag-grid/" />
+  </head>
+  <body>
+    Redirecting…
+  </body>
+</html>
